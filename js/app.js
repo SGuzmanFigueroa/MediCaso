@@ -1,38 +1,29 @@
 /* =========================================================
    MediCaso – Lógica de la aplicación
-   Navegación por secciones, biblioteca, simulador,
-   resultados, glosario y fuentes.
+   Navegación por secciones, biblioteca, expediente por
+   etapas, mapa corporal, glosario y fuentes.
    ========================================================= */
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
-const LETRAS = ["A", "B", "C", "D"];
-
-// Lectura/escritura segura de localStorage (puede no estar disponible)
-const store = {
-  get(key, def) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
-  },
-  set(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* sin almacenamiento */ }
-  }
-};
 
 /* ---------------- Navegación ---------------- */
-const VISTAS = ["inicio", "biblioteca", "simulador", "resultados", "glosario", "fuentes"];
+const VISTAS = ["inicio", "casos", "caso", "mapa", "glosario", "fuentes"];
 
 function mostrarVista(nombre) {
   if (!VISTAS.includes(nombre)) nombre = "inicio";
   VISTAS.forEach((v) => { $("#view-" + v).hidden = v !== nombre; });
-  $$(".nav a").forEach((a) => a.classList.toggle("is-active", a.dataset.view === nombre));
+  const activa = nombre === "caso" ? "casos" : nombre;
+  $$(".nav a").forEach((a) => a.classList.toggle("is-active", a.dataset.view === activa));
   cerrarMenu();
   window.scrollTo({ top: 0, behavior: "instant" });
-  if (nombre === "resultados") pintarResultados();
 }
 
 function leerHash() {
   const [vista, param] = location.hash.replace("#", "").split("/");
-  if (vista === "simulador" && param) iniciarCaso(param);
+  if (vista === "caso") {
+    if (!abrirCaso(param)) { location.hash = "casos"; return; }
+  }
   mostrarVista(vista || "inicio");
 }
 window.addEventListener("hashchange", leerHash);
@@ -44,23 +35,6 @@ menuBtn.addEventListener("click", () => {
   const abierto = $("#nav").classList.toggle("is-open");
   menuBtn.setAttribute("aria-expanded", abierto);
 });
-
-// Botones de "caso aleatorio"
-document.addEventListener("click", (e) => {
-  const r = e.target.closest("[data-random]");
-  if (!r) return;
-  e.preventDefault();
-  const caso = CASOS[Math.floor(Math.random() * CASOS.length)];
-  location.hash = "simulador/" + caso.id;
-});
-
-function toast(msg) {
-  const t = $("#toast");
-  t.textContent = msg;
-  t.classList.add("is-show");
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove("is-show"), 2600);
-}
 
 /* ---------------- Inicio: estadísticas animadas ---------------- */
 function contar(el, fin) {
@@ -82,10 +56,9 @@ setInterval(() => {
   $("#vSat").textContent = 95 + Math.floor(Math.random() * 3);
 }, 2000);
 
-/* ---------------- Biblioteca ---------------- */
+/* ---------------- Biblioteca de casos ---------------- */
 const filtros = { texto: "", dif: "todas", esp: "todas" };
 
-// Opciones de especialidad
 [...new Set(CASOS.map((c) => c.especialidad))].sort().forEach((esp) => {
   $("#filtroEspecialidad").insertAdjacentHTML("beforeend", `<option value="${esp}">${esp}</option>`);
 });
@@ -94,17 +67,8 @@ function normalizar(s) {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-function pintarCasos() {
-  const hechos = store.get("mc-historial", []).map((h) => h.id);
-  const q = normalizar(filtros.texto);
-  const lista = CASOS.filter((c) => {
-    const texto = normalizar([c.titulo, c.especialidad, c.resumen, c.motivo, c.codigo].join(" "));
-    return (!q || texto.includes(q))
-      && (filtros.dif === "todas" || c.dificultad === filtros.dif)
-      && (filtros.esp === "todas" || c.especialidad === filtros.esp);
-  });
-
-  $("#listaCasos").innerHTML = lista.map((c) => `
+function tarjetaCaso(c) {
+  return `
     <article class="case">
       <div class="case__top">
         <span class="case__esp"><i style="background:${c.color}">${icono(c.icono)}</i>${c.especialidad}</span>
@@ -115,17 +79,27 @@ function pintarCasos() {
         <h3>${c.titulo}</h3>
         <p>${c.resumen}</p>
         <div class="case__meta">
-          <span>${icono("reloj")} ${c.tiempo} min</span>
-          <span>${icono("pregunta")} ${c.preguntas.length} preguntas</span>
+          <span>${icono("reloj")} ${c.tiempo} min de lectura</span>
           <span>${icono("usuario")} ${c.paciente.edad} años</span>
         </div>
       </div>
       <div class="case__foot">
-        <span class="case__done">${hechos.includes(c.id) ? `${icono("check")} Resuelto` : ""}</span>
-        <a class="btn btn--primary" href="#simulador/${c.id}">Iniciar caso</a>
+        <span class="case__stages">5 etapas</span>
+        <a class="btn btn--primary" href="#caso/${c.id}">Abrir expediente</a>
       </div>
-    </article>`).join("");
+    </article>`;
+}
 
+function pintarCasos() {
+  const q = normalizar(filtros.texto);
+  const lista = CASOS.filter((c) => {
+    const texto = normalizar([c.titulo, c.especialidad, c.resumen, c.motivo, c.codigo].join(" "));
+    return (!q || texto.includes(q))
+      && (filtros.dif === "todas" || c.dificultad === filtros.dif)
+      && (filtros.esp === "todas" || c.especialidad === filtros.esp);
+  });
+
+  $("#listaCasos").innerHTML = lista.map(tarjetaCaso).join("");
   $("#conteoCasos").textContent = `Mostrando ${lista.length} de ${CASOS.length} casos`;
   $("#sinCasos").hidden = lista.length > 0;
 }
@@ -141,207 +115,194 @@ $("#filtroDificultad").addEventListener("click", (e) => {
   pintarCasos();
 });
 
-/* ---------------- Simulador ---------------- */
-let sim = null; // { caso, indice, respuestas: [] }
+/* ---------------- Expediente por etapas ---------------- */
+const ETAPAS = [
+  { id: "consulta", nombre: "Consulta", ico: "consulta" },
+  { id: "exploracion", nombre: "Exploración", ico: "estetoscopio" },
+  { id: "examenes", nombre: "Exámenes", ico: "probeta" },
+  { id: "diagnostico", nombre: "Diagnóstico", ico: "lupa" },
+  { id: "tratamiento", nombre: "Tratamiento", ico: "pastilla" }
+];
 
-function iniciarCaso(id) {
+let actual = null; // { caso, etapa, revelado }
+
+function abrirCaso(id) {
   const caso = CASOS.find((c) => c.id === id);
-  if (!caso) return;
-  sim = { caso, indice: 0, respuestas: [] };
-  $("#simVacio").hidden = true;
-  $("#simContenido").hidden = false;
-  $("#simTitulo").textContent = caso.titulo;
-  $("#simSub").textContent = `${caso.codigo} · ${caso.especialidad} · ${caso.dificultad}`;
-  pintarExpediente(caso);
-  pintarPregunta();
-}
+  if (!caso) return false;
+  if (!actual || actual.caso.id !== id) actual = { caso, etapa: 0, revelado: false };
 
-function pintarExpediente(c) {
-  $("#expediente").innerHTML = `
-    <div class="chart__head">
-      <small>HISTORIA CLÍNICA · ${c.codigo}</small>
-      <h3>${c.especialidad}</h3>
-    </div>
-    <div class="chart__patient">
-      <div class="avatar" style="background:${c.color}">${c.paciente.avatar}</div>
+  $("#casoTitulo").textContent = caso.titulo;
+  $("#casoSub").textContent = `${caso.codigo} · ${caso.especialidad} · ${caso.dificultad}`;
+  $("#casoPaciente").innerHTML = `
+    <div class="patient__head">
+      <div class="avatar" style="background:${caso.color}">${caso.paciente.avatar}</div>
       <div>
-        <b>${c.paciente.nombre}</b>
-        <span>${c.paciente.edad} años · ${c.paciente.sexo} · ${c.paciente.ocupacion}</span>
+        <b>${caso.paciente.nombre}</b>
+        <span>${caso.paciente.edad} años · ${caso.paciente.sexo}</span>
       </div>
     </div>
-    <div class="chart__block"><h4>Motivo de consulta</h4><p>${c.motivo}</p></div>
-    <div class="chart__block"><h4>Enfermedad actual</h4><p>${c.enfermedadActual}</p></div>
-    <div class="chart__block"><h4>Antecedentes</h4><ul>${c.antecedentes.map((a) => `<li>${a}</li>`).join("")}</ul></div>
-    <div class="chart__block"><h4>Signos vitales</h4>
+    <dl class="patient__facts">
+      <div><dt>Ocupación</dt><dd>${caso.paciente.ocupacion}</dd></div>
+      <div><dt>Especialidad</dt><dd>${caso.especialidad}</dd></div>
+      <div><dt>Dificultad</dt><dd><span class="dif dif--${caso.dificultad}">${caso.dificultad}</span></dd></div>
+    </dl>
+    <div class="patient__block">
+      <h2>Antecedentes</h2>
+      <ul>${caso.antecedentes.map((a) => `<li>${a}</li>`).join("")}</ul>
+    </div>
+    <p class="patient__note">${icono("candado")} Paciente ficticio con fines educativos</p>`;
+  pintarEtapa();
+  return true;
+}
+
+function pintarStepper() {
+  $("#stepper").innerHTML = ETAPAS.map((e, i) => `
+    <li>
+      <button class="step ${i === actual.etapa ? "is-current" : ""} ${i < actual.etapa ? "is-done" : ""}" data-i="${i}" aria-current="${i === actual.etapa ? "step" : "false"}">
+        <span class="step__dot">${i < actual.etapa ? icono("check") : icono(e.ico)}</span>
+        <span class="step__label"><small>Etapa ${i + 1}</small>${e.nombre}</span>
+      </button>
+    </li>`).join("");
+}
+
+function notaRazonamiento(texto) {
+  return `<div class="reasoning"><span>${icono("foco")} Razonamiento clínico</span><p>${texto}</p></div>`;
+}
+
+const RENDER_ETAPA = {
+  consulta(c) {
+    return `
+      <h2>Motivo de consulta</h2>
+      <blockquote class="quote">${c.motivo}</blockquote>
+      <h3>Enfermedad actual</h3>
+      <p>${c.enfermedadActual}</p>
+      ${notaRazonamiento(c.razonamiento.consulta)}`;
+  },
+  exploracion(c) {
+    return `
+      <h2>Signos vitales</h2>
       <div class="vitals">${c.vitales.map((v) => `
         <div class="vital${v.alerta ? " is-alert" : ""}"><small>${v.k}</small><b>${v.v}</b></div>`).join("")}
       </div>
-    </div>
-    <div class="chart__block"><h4>Examen físico</h4><p>${c.examen}</p></div>`;
+      <h3>Examen físico</h3>
+      <p>${c.examen}</p>
+      ${notaRazonamiento(c.razonamiento.exploracion)}`;
+  },
+  examenes(c) {
+    return `
+      <h2>Resultados de exámenes</h2>
+      <div class="lab">
+        ${c.examenes.map((e) => `
+          <div class="lab__row${e.alerta ? " is-alert" : ""}">
+            <span class="lab__name">${e.n}</span>
+            <span class="lab__res">${e.r}</span>
+          </div>`).join("")}
+      </div>
+      ${notaRazonamiento(c.razonamiento.examenes)}`;
+  },
+  diagnostico(c) {
+    if (!actual.revelado) {
+      return `
+        <div class="pause">
+          <div class="pause__icon">${icono("foco")}</div>
+          <h2>Haz una pausa antes de continuar</h2>
+          <p>Con todo lo que has visto (consulta, exploración y exámenes), ¿qué diagnóstico sospechas? Piénsalo o anótalo en tu cuaderno antes de revelarlo.</p>
+          <button class="btn btn--primary" id="btnRevelar">${icono("ojoabierto")} Revelar diagnóstico</button>
+        </div>`;
+    }
+    return `
+      <div class="dx">
+        <small>Diagnóstico final</small>
+        <h2>${c.diagnostico}</h2>
+      </div>
+      <h3>Diagnóstico diferencial</h3>
+      <p class="muted">Enfermedades que podían explicar el cuadro y por qué se confirman o se descartan.</p>
+      <div class="ddx">
+        ${c.diferencial.map((d) => `
+          <div class="ddx__item ${d.ok ? "is-ok" : ""}">
+            <span class="ddx__badge">${d.ok ? icono("check") + " Confirmado" : icono("equis") + " Descartado"}</span>
+            <h4>${d.dx}</h4>
+            <p>${d.razon}</p>
+          </div>`).join("")}
+      </div>`;
+  },
+  tratamiento(c) {
+    const fuente = FUENTES.find((f) => f.id === c.fuente);
+    const siguiente = CASOS[(CASOS.indexOf(c) + 1) % CASOS.length];
+    return `
+      <h2>Plan de manejo</h2>
+      <ol class="plan">${c.tratamiento.map((t) => `<li>${t}</li>`).join("")}</ol>
+      <div class="alarm">
+        <h3>${icono("alerta")} Señales de alarma</h3>
+        <ul>${c.alarma.map((a) => `<li>${a}</li>`).join("")}</ul>
+      </div>
+      <h3>Para seguir estudiando</h3>
+      <ul class="recs">
+        ${c.recomendaciones.map((r) => `<li>${icono("marcador")}<div>${r}</div></li>`).join("")}
+        ${fuente ? `<li>${icono("libro")}<div>Fuente: <a href="${fuente.url}" target="_blank" rel="noopener">${fuente.titulo}</a></div></li>` : ""}
+      </ul>
+      <a class="next-case" href="#caso/${siguiente.id}">
+        <span><small>Siguiente caso</small>${siguiente.titulo}</span>
+        ${icono("flecha")}
+      </a>`;
+  }
+};
+
+function pintarEtapa() {
+  const { caso, etapa } = actual;
+  pintarStepper();
+  $("#etapa").innerHTML = RENDER_ETAPA[ETAPAS[etapa].id](caso);
+  $("#btnAnterior").disabled = etapa === 0;
+  $("#btnSiguiente").hidden = etapa === ETAPAS.length - 1;
+  $("#btnSiguiente").disabled = ETAPAS[etapa].id === "diagnostico" && !actual.revelado;
 }
 
-function pintarPregunta() {
-  const { caso, indice } = sim;
-  const p = caso.preguntas[indice];
-  const total = caso.preguntas.length;
-
-  $("#progresoTxt").textContent = `Pregunta ${indice + 1} de ${total}`;
-  $("#barra").style.width = `${(indice / total) * 100}%`;
-  $("#btnSiguiente").disabled = true;
-  $("#btnSiguiente").textContent = indice === total - 1 ? "Ver resultados →" : "Siguiente →";
-
-  $("#pregunta").innerHTML = `
-    <span class="question__type">${p.tipo}</span>
-    <h2>${p.enunciado}</h2>
-    <div class="options">
-      ${p.opciones.map((o, i) => `
-        <button class="option" data-i="${i}"><span class="option__key">${LETRAS[i]}</span><span>${o}</span></button>`).join("")}
-    </div>
-    <div id="feedback"></div>`;
+function irEtapa(i) {
+  actual.etapa = Math.max(0, Math.min(ETAPAS.length - 1, i));
+  pintarEtapa();
+  if (window.innerWidth < 1080) $("#stepper").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-$("#pregunta").addEventListener("click", (e) => {
-  const btn = e.target.closest(".option");
-  if (!btn || btn.disabled) return;
-  const p = sim.caso.preguntas[sim.indice];
-  const elegida = Number(btn.dataset.i);
-  const acierto = elegida === p.correcta;
-  sim.respuestas[sim.indice] = elegida;
-
-  $$("#pregunta .option").forEach((o, i) => {
-    o.disabled = true;
-    if (i === p.correcta) o.classList.add("is-correct");
-    else if (i === elegida) o.classList.add("is-wrong");
-    else o.classList.add("is-dim");
-  });
-
-  $("#feedback").innerHTML = `
-    <div class="feedback ${acierto ? "feedback--ok" : "feedback--bad"}">
-      <b>${acierto ? "¡Correcto!" : `Incorrecto. La respuesta era ${LETRAS[p.correcta]}.`}</b>
-      <p>${p.explicacion}</p>
-    </div>`;
-  $("#barra").style.width = `${((sim.indice + 1) / sim.caso.preguntas.length) * 100}%`;
-  $("#btnSiguiente").disabled = false;
-  $("#btnSiguiente").focus({ preventScroll: true });
+$("#stepper").addEventListener("click", (e) => {
+  const b = e.target.closest(".step");
+  if (b) irEtapa(Number(b.dataset.i));
 });
-
-$("#btnSiguiente").addEventListener("click", () => {
-  if (sim.indice < sim.caso.preguntas.length - 1) {
-    sim.indice++;
-    pintarPregunta();
-    $("#pregunta").scrollIntoView({ behavior: "smooth", block: "center" });
-  } else {
-    finalizarCaso();
+$("#btnAnterior").addEventListener("click", () => irEtapa(actual.etapa - 1));
+$("#btnSiguiente").addEventListener("click", () => irEtapa(actual.etapa + 1));
+$("#etapa").addEventListener("click", (e) => {
+  if (e.target.closest("#btnRevelar")) {
+    actual.revelado = true;
+    pintarEtapa();
   }
 });
 
-$("#btnSalir").addEventListener("click", () => {
-  sim = null;
-  $("#simVacio").hidden = false;
-  $("#simContenido").hidden = true;
-  $("#simTitulo").textContent = "Selecciona un caso";
-  $("#simSub").textContent = "Elige un caso de la biblioteca para comenzar la simulación.";
-  location.hash = "biblioteca";
+/* ---------------- Mapa corporal ---------------- */
+function seleccionarRegion(id) {
+  const r = REGIONES[id];
+  $$("#cuerpo .zone").forEach((z) => z.classList.toggle("is-active", z.dataset.region === id));
+  $$("#chipsRegion .chip").forEach((c) => c.classList.toggle("is-active", c.dataset.region === id));
+  const casos = CASOS.filter((c) => c.regiones.includes(id));
+  $("#regionNombre").textContent = r.nombre;
+  $("#regionDesc").textContent = `${r.desc} ${casos.length} caso${casos.length === 1 ? "" : "s"} relacionado${casos.length === 1 ? "" : "s"}.`;
+  $("#regionCasos").innerHTML = casos.map((c) => `
+    <a class="mini-case" href="#caso/${c.id}">
+      <i style="background:${c.color}">${icono(c.icono)}</i>
+      <span><small>${c.especialidad} · ${c.dificultad}</small>${c.titulo}</span>
+      ${icono("flecha")}
+    </a>`).join("") || `<p class="muted">Aún no hay casos para esta zona.</p>`;
+}
+
+$("#chipsRegion").innerHTML = Object.entries(REGIONES)
+  .map(([id, r]) => `<button class="chip" data-region="${id}">${r.nombre}</button>`).join("");
+$("#chipsRegion").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip");
+  if (c) seleccionarRegion(c.dataset.region);
 });
-
-function finalizarCaso() {
-  const { caso, respuestas } = sim;
-  const aciertos = caso.preguntas.filter((p, i) => respuestas[i] === p.correcta).length;
-  const resultado = { id: caso.id, respuestas, aciertos, total: caso.preguntas.length, fecha: new Date().toISOString() };
-
-  store.set("mc-ultimo", resultado);
-  const historial = store.get("mc-historial", []);
-  historial.unshift(resultado);
-  store.set("mc-historial", historial.slice(0, 30));
-  ultimoEnMemoria = resultado;
-
-  pintarCasos();
-  location.hash = "resultados";
-}
-
-/* ---------------- Resultados ---------------- */
-let ultimoEnMemoria = null;
-
-function pintarResultados() {
-  const r = ultimoEnMemoria || store.get("mc-ultimo", null);
-  const caso = r && CASOS.find((c) => c.id === r.id);
-  $("#resVacio").hidden = !!caso;
-  $("#resContenido").hidden = !caso;
-  pintarHistorial();
-  if (!caso) return;
-
-  const porc = Math.round((r.aciertos / r.total) * 100);
-  const anillo = $("#anillo");
-  const circ = 2 * Math.PI * 52;
-  anillo.style.stroke = porc >= 70 ? "var(--green)" : porc >= 40 ? "var(--amber)" : "var(--red)";
-  anillo.style.strokeDashoffset = circ;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    anillo.style.strokeDashoffset = circ * (1 - porc / 100);
-  }));
-
-  $("#resPorc").textContent = porc + "%";
-  $("#resFrac").textContent = `${r.aciertos}/${r.total} aciertos`;
-  $("#resCaso").textContent = caso.titulo;
-  $("#resNivel").textContent = `${caso.especialidad} · ${caso.dificultad}`;
-  $("#resOk").textContent = r.aciertos;
-  $("#resBad").textContent = r.total - r.aciertos;
-  $("#resMensaje").textContent =
-    porc === 100 ? "¡Excelente! Dominas este caso. Prueba uno de mayor dificultad."
-    : porc >= 70 ? "Buen trabajo. Revisa los puntos que fallaste para consolidar lo aprendido."
-    : porc >= 40 ? "Vas por buen camino, pero conviene repasar el tema antes de reintentar."
-    : "Este tema necesita repaso. Lee las explicaciones y las fuentes recomendadas.";
-
-  $("#resRevision").innerHTML = caso.preguntas.map((p, i) => {
-    const ok = r.respuestas[i] === p.correcta;
-    return `
-      <div class="review__item ${ok ? "ok" : "bad"}">
-        <span class="review__icon">${icono(ok ? "check" : "equis")}</span>
-        <div>
-          <h4>${i + 1}. ${p.enunciado}</h4>
-          <p>Tu respuesta: <b>${p.opciones[r.respuestas[i]] ?? "—"}</b>${ok ? "" : ` · Correcta: <b>${p.opciones[p.correcta]}</b>`}</p>
-          <p>${p.explicacion}</p>
-        </div>
-      </div>`;
-  }).join("");
-
-  const fuente = FUENTES.find((f) => f.id === caso.fuente);
-  const otros = CASOS.filter((c) => c.id !== caso.id && c.dificultad === caso.dificultad).slice(0, 1);
-  $("#resRecs").innerHTML = [
-    ...caso.recomendaciones.map((t) => `<li>${icono("marcador")}<div>${t}</div></li>`),
-    fuente ? `<li>${icono("libro")}<div>Consulta: <a href="${fuente.url}" target="_blank" rel="noopener">${fuente.titulo}</a></div></li>` : "",
-    ...otros.map((c) => `<li>${icono("flecha")}<div>Practica otro caso de tu nivel: <a href="#simulador/${c.id}">${c.titulo}</a></div></li>`)
-  ].join("");
-}
-
-function pintarHistorial() {
-  const h = store.get("mc-historial", []);
-  $("#historialBox").hidden = h.length === 0;
-  $("#historial").innerHTML = h.map((r) => {
-    const c = CASOS.find((x) => x.id === r.id);
-    if (!c) return "";
-    const p = Math.round((r.aciertos / r.total) * 100);
-    const cls = p >= 70 ? "hi" : p >= 40 ? "mid" : "lo";
-    return `<tr>
-      <td>${c.titulo}</td>
-      <td>${c.especialidad}</td>
-      <td><span class="pill pill--${cls}">${r.aciertos}/${r.total} · ${p}%</span></td>
-      <td>${new Date(r.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
-    </tr>`;
-  }).join("");
-}
-
-$("#btnReintentar").addEventListener("click", () => {
-  const r = ultimoEnMemoria || store.get("mc-ultimo", null);
-  if (r) location.hash = "simulador/" + r.id;
-});
-
-$("#btnBorrarHist").addEventListener("click", () => {
-  store.set("mc-historial", []);
-  store.set("mc-ultimo", null);
-  ultimoEnMemoria = null;
-  pintarResultados();
-  pintarCasos();
-  toast("Historial borrado");
+$$("#cuerpo .zone").forEach((z) => {
+  z.addEventListener("click", () => seleccionarRegion(z.dataset.region));
+  z.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarRegion(z.dataset.region); }
+  });
 });
 
 /* ---------------- Glosario ---------------- */
@@ -350,7 +311,7 @@ let letraActiva = null;
 function pintarAlfabeto() {
   const iniciales = new Set(GLOSARIO.map((g) => normalizar(g.t[0]).toUpperCase()));
   const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  $("#alfabeto").innerHTML = `<button data-l="" class="is-active" style="width:auto;padding:0 12px">Todos</button>` +
+  $("#alfabeto").innerHTML = `<button data-l="" class="is-active alpha__all">Todos</button>` +
     abc.map((l) => `<button data-l="${l}" ${iniciales.has(l) ? "" : "disabled"}>${l}</button>`).join("");
 }
 
