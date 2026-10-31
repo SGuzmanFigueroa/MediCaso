@@ -363,7 +363,7 @@ function pintarGlosario() {
 
   $("#listaGlosario").innerHTML = lista.map((g) => `
     <article class="term">
-      <h3>${g.t}<small>${g.cat}</small></h3>
+      <h2>${g.t}<small>${g.cat}</small></h2>
       <p>${g.d}</p>
       ${g.ej ? `<div class="term__ex">${icono("foco")}<span>${g.ej}</span></div>` : ""}
     </article>`).join("");
@@ -385,7 +385,7 @@ function pintarFuentes() {
   $("#listaFuentes").innerHTML = FUENTES.map((f) => `
     <article class="source" id="fuente-${f.id}">
       <span class="source__type">${f.tipo}</span>
-      <h3>${f.titulo}</h3>
+      <h2>${f.titulo}</h2>
       <p>${f.desc}</p>
       <cite>${f.cita}</cite>
       <a href="${f.url}" target="_blank" rel="noopener">Consultar fuente ${icono("externo")}</a>
