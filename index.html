@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediCaso – Simulador de Casos Clínicos</title>
+  <meta name="description" content="MediCaso: plataforma universitaria para practicar razonamiento clínico con casos ficticios, preguntas interactivas y retroalimentación inmediata.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23182447'/><path d='M4 17h6l3-7 4 13 3-9 2 3h6' fill='none' stroke='%2334d399' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+
+  <!-- ===== BARRA SUPERIOR ===== -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a href="#inicio" class="brand" data-view="inicio">
+        <span class="brand__logo">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 17h6l3-7 4 13 3-9 2 3h6"/></svg>
+        </span>
+        <span class="brand__text">Medi<b>Caso</b><small>Simulador de Casos Clínicos</small></span>
+      </a>
+
+      <nav class="nav" id="nav">
+        <a href="#inicio" data-view="inicio">Inicio</a>
+        <a href="#biblioteca" data-view="biblioteca">Biblioteca</a>
+        <a href="#simulador" data-view="simulador">Simulador</a>
+        <a href="#resultados" data-view="resultados">Resultados</a>
+        <a href="#glosario" data-view="glosario">Glosario</a>
+        <a href="#fuentes" data-view="fuentes">Fuentes</a>
+      </nav>
+
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== INICIO ===================== -->
+    <section class="view" id="view-inicio">
+      <div class="hero">
+        <div class="container hero__grid">
+          <div class="hero__text">
+            <span class="tag tag--live"><i></i> Plataforma educativa universitaria</span>
+            <h1>Piensa como médico.<br><span>Un caso a la vez.</span></h1>
+            <p class="lead">MediCaso es un simulador de casos clínicos ficticios donde el estudiante analiza síntomas, antecedentes y signos vitales, toma decisiones y recibe una explicación inmediata de cada respuesta.</p>
+            <div class="hero__actions">
+              <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Explorar casos</a>
+              <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio ↻</a>
+            </div>
+            <ul class="hero__stats">
+              <li><b id="statCasos">0</b><span>casos clínicos</span></li>
+              <li><b id="statEsp">0</b><span>especialidades</span></li>
+              <li><b id="statTerm">0</b><span>términos en glosario</span></li>
+            </ul>
+          </div>
+
+          <!-- Monitor de paciente decorativo -->
+          <div class="monitor" aria-hidden="true">
+            <div class="monitor__head">
+              <span>PACIENTE SIMULADO · CAMA 04</span>
+              <span class="monitor__rec">● EN VIVO</span>
+            </div>
+            <svg class="ecg" viewBox="0 0 600 120" preserveAspectRatio="none">
+              <path class="ecg__line" d="M0 60 H70 l10 -6 l10 6 H120 l8 18 l12 -70 l12 82 l8 -30 H200 l12 -10 l14 10 H300 l10 -6 l10 6 H350 l8 18 l12 -70 l12 82 l8 -30 H430 l12 -10 l14 10 H530 l10 -6 l10 6 H600"/>
+            </svg>
+            <div class="monitor__vitals">
+              <div><small>FC</small><b class="v-green" id="vFc">88</b><em>lpm</em></div>
+              <div><small>PA</small><b class="v-red">132/84</b><em>mmHg</em></div>
+              <div><small>SpO₂</small><b class="v-blue" id="vSat">96</b><em>%</em></div>
+              <div><small>T°</small><b class="v-amber">37.8</b><em>°C</em></div>
+            </div>
+            <div class="monitor__foot">Datos 100% ficticios con fines educativos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Objetivo educativo</span>
+          <h2>Del libro a la decisión clínica</h2>
+          <p>Leer teoría no basta: el razonamiento clínico se entrena enfrentándose a pacientes. MediCaso ofrece un espacio seguro para equivocarse, aprender del error y repetir.</p>
+        </div>
+
+        <div class="goals">
+          <article class="goal">
+            <div class="goal__icon">🧠</div>
+            <h3>Razonamiento clínico</h3>
+            <p>Integrar síntomas, antecedentes y signos vitales para plantear diagnósticos diferenciales.</p>
+          </article>
+          <article class="goal">
+            <div class="goal__icon">🎯</div>
+            <h3>Toma de decisiones</h3>
+            <p>Elegir el examen, diagnóstico o tratamiento más adecuado en cada situación.</p>
+          </article>
+          <article class="goal">
+            <div class="goal__icon">💬</div>
+            <h3>Retroalimentación inmediata</h3>
+            <p>Cada respuesta incluye una explicación breve del porqué es correcta o incorrecta.</p>
+          </article>
+          <article class="goal">
+            <div class="goal__icon">🔒</div>
+            <h3>Ética y seguridad</h3>
+            <p>Ningún caso utiliza datos reales de pacientes: todos son ficticios y educativos.</p>
+          </article>
+        </div>
+
+        <div class="section-head">
+          <span class="eyebrow">¿Cómo funciona?</span>
+          <h2>Cuatro pasos para resolver un caso</h2>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <span class="steps__n">01</span>
+            <h3>Elige un caso</h3>
+            <p>Busca en la biblioteca por especialidad o filtra por dificultad.</p>
+          </li>
+          <li>
+            <span class="steps__n">02</span>
+            <h3>Analiza al paciente</h3>
+            <p>Revisa motivo de consulta, antecedentes, signos vitales y examen físico.</p>
+          </li>
+          <li>
+            <span class="steps__n">03</span>
+            <h3>Responde</h3>
+            <p>Contesta preguntas de opción múltiple y lee la explicación de cada una.</p>
+          </li>
+          <li>
+            <span class="steps__n">04</span>
+            <h3>Revisa tu resultado</h3>
+            <p>Obtén tu puntuación, tus aciertos y errores y recomendaciones de estudio.</p>
+          </li>
+        </ol>
+
+        <div class="cta">
+          <div>
+            <h2>¿Listo para tu primera guardia?</h2>
+            <p>Empieza con un caso básico y sube de nivel cuando te sientas seguro.</p>
+          </div>
+          <a href="#biblioteca" class="btn btn--light" data-view="biblioteca">Ir a la biblioteca →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BIBLIOTECA ===================== -->
+    <section class="view" id="view-biblioteca" hidden>
+      <div class="page-head">
+        <div class="container">
+          <span class="eyebrow">Biblioteca</span>
+          <h1>Casos clínicos</h1>
+          <p>Casos sencillos de distintas especialidades. Usa el buscador o filtra por dificultad.</p>
+        </div>
+      </div>
+      <div class="container">
+        <div class="toolbar">
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="buscarCaso" placeholder="Buscar por síntoma, especialidad o título…" aria-label="Buscar caso">
+          </label>
+          <div class="chips" id="filtroDificultad" role="group" aria-label="Filtrar por dificultad">
+            <button class="chip is-active" data-dif="todas">Todas</button>
+            <button class="chip" data-dif="Básico">Básico</button>
+            <button class="chip" data-dif="Intermedio">Intermedio</button>
+            <button class="chip" data-dif="Avanzado">Avanzado</button>
+          </div>
+          <select id="filtroEspecialidad" class="select" aria-label="Filtrar por especialidad">
+            <option value="todas">Todas las especialidades</option>
+          </select>
+        </div>
+        <p class="result-count" id="conteoCasos"></p>
+        <div class="cases" id="listaCasos"></div>
+        <div class="empty" id="sinCasos" hidden>
+          <div>🔍</div>
+          <p>No se encontraron casos con esos filtros.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SIMULADOR ===================== -->
+    <section class="view" id="view-simulador" hidden>
+      <div class="page-head page-head--sim">
+        <div class="container">
+          <span class="eyebrow">Simulador interactivo</span>
+          <h1 id="simTitulo">Selecciona un caso</h1>
+          <p id="simSub">Elige un caso de la biblioteca para comenzar la simulación.</p>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="empty" id="simVacio">
+          <div>🩺</div>
+          <p>Aún no has elegido un caso.</p>
+          <div class="hero__actions hero__actions--center">
+            <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Ir a la biblioteca</a>
+            <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio ↻</a>
+          </div>
+        </div>
+
+        <div class="sim" id="simContenido" hidden>
+          <!-- Expediente -->
+          <aside class="chart" id="expediente"></aside>
+
+          <!-- Preguntas -->
+          <div class="quiz">
+            <div class="quiz__progress">
+              <div class="quiz__bar"><span id="barra"></span></div>
+              <span id="progresoTxt">Pregunta 1 de 3</span>
+            </div>
+            <div class="question" id="pregunta"></div>
+            <div class="quiz__actions">
+              <button class="btn btn--ghost" id="btnSalir">Abandonar caso</button>
+              <button class="btn btn--primary" id="btnSiguiente" disabled>Siguiente →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTADOS ===================== -->
+    <section class="view" id="view-resultados" hidden>
+      <div class="page-head">
+        <div class="container">
+          <span class="eyebrow">Resultados</span>
+          <h1>Tu desempeño</h1>
+          <p>Puntuación, respuestas correctas e incorrectas y recomendaciones para seguir estudiando.</p>
+        </div>
+      </div>
+      <div class="container">
+        <div class="empty" id="resVacio">
+          <div>📊</div>
+          <p>Todavía no has resuelto ningún caso.</p>
+          <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Resolver mi primer caso</a>
+        </div>
+
+        <div id="resContenido" hidden>
+          <div class="score">
+            <div class="score__ring">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="52" class="ring-bg"/>
+                <circle cx="60" cy="60" r="52" class="ring-fg" id="anillo"/>
+              </svg>
+              <div class="score__num"><b id="resPorc">0%</b><small id="resFrac">0/0</small></div>
+            </div>
+            <div class="score__info">
+              <span class="tag" id="resNivel">—</span>
+              <h2 id="resCaso">—</h2>
+              <p id="resMensaje"></p>
+              <div class="score__counts">
+                <span class="ok">✔ <b id="resOk">0</b> correctas</span>
+                <span class="bad">✘ <b id="resBad">0</b> incorrectas</span>
+              </div>
+              <div class="hero__actions">
+                <button class="btn btn--primary" id="btnReintentar">Reintentar caso</button>
+                <a href="#biblioteca" class="btn btn--ghost" data-view="biblioteca">Otro caso</a>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="subhead">Revisión de respuestas</h3>
+          <div class="review" id="resRevision"></div>
+
+          <h3 class="subhead">Recomendaciones para seguir estudiando</h3>
+          <ul class="recs" id="resRecs"></ul>
+        </div>
+
+        <div class="history" id="historialBox" hidden>
+          <div class="history__head">
+            <h3 class="subhead">Historial de práctica</h3>
+            <button class="link-btn" id="btnBorrarHist">Borrar historial</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Caso</th><th>Especialidad</th><th>Puntaje</th><th>Fecha</th></tr></thead>
+              <tbody id="historial"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== GLOSARIO ===================== -->
+    <section class="view" id="view-glosario" hidden>
+      <div class="page-head">
+        <div class="container">
+          <span class="eyebrow">Glosario médico</span>
+          <h1>Términos explicados fácil</h1>
+          <p>Definiciones claras y sin tecnicismos de las palabras que aparecen en los casos.</p>
+        </div>
+      </div>
+      <div class="container">
+        <div class="toolbar">
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="buscarTermino" placeholder="Buscar término…" aria-label="Buscar término">
+          </label>
+        </div>
+        <div class="alpha" id="alfabeto"></div>
+        <div class="glossary" id="listaGlosario"></div>
+        <div class="empty" id="sinTerminos" hidden>
+          <div>📖</div>
+          <p>No se encontró ese término.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FUENTES ===================== -->
+    <section class="view" id="view-fuentes" hidden>
+      <div class="page-head">
+        <div class="container">
+          <span class="eyebrow">Fuentes bibliográficas</span>
+          <h1>Referencias confiables</h1>
+          <p>El contenido de MediCaso se basa en organismos de salud y guías clínicas reconocidas. Consulta siempre la fuente original.</p>
+        </div>
+      </div>
+      <div class="container">
+        <div class="sources" id="listaFuentes"></div>
+        <div class="disclaimer">
+          <h3>⚠️ Aviso educativo</h3>
+          <p>MediCaso es un recurso académico. Los casos son ficticios y simplificados, no reemplazan la formación supervisada ni la consulta con un profesional de la salud, y no deben usarse para diagnosticar o tratar a personas reales.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>
+        <a href="#inicio" class="brand brand--footer" data-view="inicio">
+          <span class="brand__logo"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 17h6l3-7 4 13 3-9 2 3h6"/></svg></span>
+          <span class="brand__text">Medi<b>Caso</b></span>
+        </a>
+        <p>Simulador de casos clínicos con fines educativos. Proyecto universitario.</p>
+      </div>
+      <div class="footer__links">
+        <a href="#biblioteca" data-view="biblioteca">Biblioteca</a>
+        <a href="#glosario" data-view="glosario">Glosario</a>
+        <a href="#fuentes" data-view="fuentes">Fuentes</a>
+      </div>
+      <p class="footer__note">© 2026 MediCaso · Todos los casos son ficticios. No se utilizan datos reales de pacientes.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/datos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
