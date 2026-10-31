@@ -324,7 +324,6 @@ h1, h2, h3 { color: var(--ink); line-height: 1.15; letter-spacing: -.02em; }
 
 .recs { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .recs li { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 18px 20px; font-size: .93rem; display: flex; gap: 12px; }
-.recs li span { font-size: 1.3rem; }
 .recs a { color: var(--blue); font-weight: 700; }
 
 .history__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -431,3 +430,24 @@ h1, h2, h3 { color: var(--ink); line-height: 1.15; letter-spacing: -.02em; }
 /* Contraste: etiquetas sobre fondo claro */
 .section-head .eyebrow { color: #047857; }
 .tag--live { color: #a7f3d0; }
+
+/* ---------- Iconos SVG ---------- */
+.ico { width: 1.1em; height: 1.1em; flex-shrink: 0; display: inline-block; vertical-align: -0.18em; }
+.btn .ico { width: 18px; height: 18px; }
+.goal__icon { color: var(--navy); background: var(--blue-soft); }
+.goal__icon .ico { width: 26px; height: 26px; }
+.case__esp i { color: var(--navy); }
+.case__esp i .ico { width: 20px; height: 20px; }
+.case__meta span { display: inline-flex; align-items: center; gap: 5px; }
+.case__done { display: inline-flex; align-items: center; gap: 5px; }
+.avatar { font-weight: 800; font-size: 1.2rem; color: var(--navy); }
+.empty .empty__icon { width: 72px; height: 72px; border-radius: 20px; display: grid; place-items: center; margin: 0 auto 14px; background: var(--card); border: 1px solid var(--line); color: var(--navy); font-size: 1rem; }
+.empty__icon .ico { width: 32px; height: 32px; }
+.score__counts span { display: inline-flex; align-items: center; gap: 6px; }
+.review__icon .ico { width: 18px; height: 18px; stroke-width: 2.6; }
+.recs li > .ico { width: 22px; height: 22px; color: var(--blue); margin-top: 1px; }
+.term__ex { display: flex; gap: 8px; align-items: flex-start; }
+.term__ex .ico { color: var(--amber); width: 18px; height: 18px; margin-top: 1px; }
+.disclaimer h3 { display: flex; align-items: center; gap: 8px; }
+.disclaimer h3 .ico { color: #b45309; width: 22px; height: 22px; }
+.source a .ico { width: 16px; height: 16px; }

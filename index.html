@@ -50,7 +50,7 @@
             <p class="lead">MediCaso es un simulador de casos clínicos ficticios donde el estudiante analiza síntomas, antecedentes y signos vitales, toma decisiones y recibe una explicación inmediata de cada respuesta.</p>
             <div class="hero__actions">
               <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Explorar casos</a>
-              <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio ↻</a>
+              <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio <i data-ico="aleatorio"></i></a>
             </div>
             <ul class="hero__stats">
               <li><b id="statCasos">0</b><span>casos clínicos</span></li>
@@ -88,22 +88,22 @@
 
         <div class="goals">
           <article class="goal">
-            <div class="goal__icon">🧠</div>
+            <div class="goal__icon"><i data-ico="pulso"></i></div>
             <h3>Razonamiento clínico</h3>
             <p>Integrar síntomas, antecedentes y signos vitales para plantear diagnósticos diferenciales.</p>
           </article>
           <article class="goal">
-            <div class="goal__icon">🎯</div>
+            <div class="goal__icon"><i data-ico="diana"></i></div>
             <h3>Toma de decisiones</h3>
             <p>Elegir el examen, diagnóstico o tratamiento más adecuado en cada situación.</p>
           </article>
           <article class="goal">
-            <div class="goal__icon">💬</div>
+            <div class="goal__icon"><i data-ico="mensaje"></i></div>
             <h3>Retroalimentación inmediata</h3>
             <p>Cada respuesta incluye una explicación breve del porqué es correcta o incorrecta.</p>
           </article>
           <article class="goal">
-            <div class="goal__icon">🔒</div>
+            <div class="goal__icon"><i data-ico="candado"></i></div>
             <h3>Ética y seguridad</h3>
             <p>Ningún caso utiliza datos reales de pacientes: todos son ficticios y educativos.</p>
           </article>
@@ -175,7 +175,7 @@
         <p class="result-count" id="conteoCasos"></p>
         <div class="cases" id="listaCasos"></div>
         <div class="empty" id="sinCasos" hidden>
-          <div>🔍</div>
+          <div class="empty__icon"><i data-ico="lupa"></i></div>
           <p>No se encontraron casos con esos filtros.</p>
         </div>
       </div>
@@ -193,11 +193,11 @@
 
       <div class="container">
         <div class="empty" id="simVacio">
-          <div>🩺</div>
+          <div class="empty__icon"><i data-ico="estetoscopio"></i></div>
           <p>Aún no has elegido un caso.</p>
           <div class="hero__actions hero__actions--center">
             <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Ir a la biblioteca</a>
-            <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio ↻</a>
+            <a href="#simulador" class="btn btn--ghost" data-random>Caso aleatorio <i data-ico="aleatorio"></i></a>
           </div>
         </div>
 
@@ -232,7 +232,7 @@
       </div>
       <div class="container">
         <div class="empty" id="resVacio">
-          <div>📊</div>
+          <div class="empty__icon"><i data-ico="grafico"></i></div>
           <p>Todavía no has resuelto ningún caso.</p>
           <a href="#biblioteca" class="btn btn--primary" data-view="biblioteca">Resolver mi primer caso</a>
         </div>
@@ -251,8 +251,8 @@
               <h2 id="resCaso">—</h2>
               <p id="resMensaje"></p>
               <div class="score__counts">
-                <span class="ok">✔ <b id="resOk">0</b> correctas</span>
-                <span class="bad">✘ <b id="resBad">0</b> incorrectas</span>
+                <span class="ok"><i data-ico="check"></i> <b id="resOk">0</b> correctas</span>
+                <span class="bad"><i data-ico="equis"></i> <b id="resBad">0</b> incorrectas</span>
               </div>
               <div class="hero__actions">
                 <button class="btn btn--primary" id="btnReintentar">Reintentar caso</button>
@@ -302,7 +302,7 @@
         <div class="alpha" id="alfabeto"></div>
         <div class="glossary" id="listaGlosario"></div>
         <div class="empty" id="sinTerminos" hidden>
-          <div>📖</div>
+          <div class="empty__icon"><i data-ico="libro"></i></div>
           <p>No se encontró ese término.</p>
         </div>
       </div>
@@ -320,7 +320,7 @@
       <div class="container">
         <div class="sources" id="listaFuentes"></div>
         <div class="disclaimer">
-          <h3>⚠️ Aviso educativo</h3>
+          <h3><i data-ico="alerta"></i> Aviso educativo</h3>
           <p>MediCaso es un recurso académico. Los casos son ficticios y simplificados, no reemplazan la formación supervisada ni la consulta con un profesional de la salud, y no deben usarse para diagnosticar o tratar a personas reales.</p>
         </div>
       </div>
@@ -349,6 +349,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/datos.js"></script>
+  <script src="js/iconos.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

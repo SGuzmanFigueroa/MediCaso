@@ -107,7 +107,7 @@ function pintarCasos() {
   $("#listaCasos").innerHTML = lista.map((c) => `
     <article class="case">
       <div class="case__top">
-        <span class="case__esp"><i style="background:${c.color}">${c.icono}</i>${c.especialidad}</span>
+        <span class="case__esp"><i style="background:${c.color}">${icono(c.icono)}</i>${c.especialidad}</span>
         <span class="dif dif--${c.dificultad}">${c.dificultad}</span>
       </div>
       <div class="case__body">
@@ -115,13 +115,13 @@ function pintarCasos() {
         <h3>${c.titulo}</h3>
         <p>${c.resumen}</p>
         <div class="case__meta">
-          <span>⏱ ${c.tiempo} min</span>
-          <span>❓ ${c.preguntas.length} preguntas</span>
-          <span>${c.paciente.avatar} ${c.paciente.edad} años</span>
+          <span>${icono("reloj")} ${c.tiempo} min</span>
+          <span>${icono("pregunta")} ${c.preguntas.length} preguntas</span>
+          <span>${icono("usuario")} ${c.paciente.edad} años</span>
         </div>
       </div>
       <div class="case__foot">
-        <span class="case__done">${hechos.includes(c.id) ? "✔ Resuelto" : ""}</span>
+        <span class="case__done">${hechos.includes(c.id) ? `${icono("check")} Resuelto` : ""}</span>
         <a class="btn btn--primary" href="#simulador/${c.id}">Iniciar caso</a>
       </div>
     </article>`).join("");
@@ -295,7 +295,7 @@ function pintarResultados() {
     const ok = r.respuestas[i] === p.correcta;
     return `
       <div class="review__item ${ok ? "ok" : "bad"}">
-        <span class="review__icon">${ok ? "✔" : "✘"}</span>
+        <span class="review__icon">${icono(ok ? "check" : "equis")}</span>
         <div>
           <h4>${i + 1}. ${p.enunciado}</h4>
           <p>Tu respuesta: <b>${p.opciones[r.respuestas[i]] ?? "—"}</b>${ok ? "" : ` · Correcta: <b>${p.opciones[p.correcta]}</b>`}</p>
@@ -307,9 +307,9 @@ function pintarResultados() {
   const fuente = FUENTES.find((f) => f.id === caso.fuente);
   const otros = CASOS.filter((c) => c.id !== caso.id && c.dificultad === caso.dificultad).slice(0, 1);
   $("#resRecs").innerHTML = [
-    ...caso.recomendaciones.map((t) => `<li><span>📌</span><div>${t}</div></li>`),
-    fuente ? `<li><span>📚</span><div>Consulta: <a href="${fuente.url}" target="_blank" rel="noopener">${fuente.titulo}</a></div></li>` : "",
-    ...otros.map((c) => `<li><span>➡️</span><div>Practica otro caso de tu nivel: <a href="#simulador/${c.id}">${c.titulo}</a></div></li>`)
+    ...caso.recomendaciones.map((t) => `<li>${icono("marcador")}<div>${t}</div></li>`),
+    fuente ? `<li>${icono("libro")}<div>Consulta: <a href="${fuente.url}" target="_blank" rel="noopener">${fuente.titulo}</a></div></li>` : "",
+    ...otros.map((c) => `<li>${icono("flecha")}<div>Practica otro caso de tu nivel: <a href="#simulador/${c.id}">${c.titulo}</a></div></li>`)
   ].join("");
 }
 
@@ -365,7 +365,7 @@ function pintarGlosario() {
     <article class="term">
       <h3>${g.t}<small>${g.cat}</small></h3>
       <p>${g.d}</p>
-      ${g.ej ? `<div class="term__ex">💡 ${g.ej}</div>` : ""}
+      ${g.ej ? `<div class="term__ex">${icono("foco")}<span>${g.ej}</span></div>` : ""}
     </article>`).join("");
   $("#sinTerminos").hidden = lista.length > 0;
 }
@@ -388,7 +388,7 @@ function pintarFuentes() {
       <h3>${f.titulo}</h3>
       <p>${f.desc}</p>
       <cite>${f.cita}</cite>
-      <a href="${f.url}" target="_blank" rel="noopener">Consultar fuente ↗</a>
+      <a href="${f.url}" target="_blank" rel="noopener">Consultar fuente ${icono("externo")}</a>
     </article>`).join("");
 }
 
